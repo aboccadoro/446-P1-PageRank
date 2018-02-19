@@ -2,6 +2,13 @@
   <dictionary name="Anthony">
     <words>
       <w>inlinks</w>
+      <w>intemp</w>
+      <w>outlinks</w>
+      <w>outtemp</w>
+      <w>pagerank</w>
+      <w>stringinlinks</w>
+      <w>stringlinks</w>
+      <w>stringoutlinks</w>
     </words>
   </dictionary>
 </component>
