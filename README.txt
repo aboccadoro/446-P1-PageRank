@@ -3,7 +3,7 @@ JRE and JDK are required to compile and run this program. If not importing into 
 choice, .class files are provided for command line execution. To run the program via
 command line simply type:
 
-java PageRank.class
+java PageRank
 
 and to compile:
 

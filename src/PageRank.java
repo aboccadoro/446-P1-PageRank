@@ -13,71 +13,66 @@ public class PageRank {
         long start = System.nanoTime();
         PageRank pr = new PageRank();
         Tuple<Map<String, Integer>, Map<String, Integer>, Map<String, ArrayList<String>>, Map<String, ArrayList<String>>> links = pr.populate();
-        final int N = pages.size();
+        final float N = pages.size();
         for (int i = 0; i < pages.size(); i++) {
             I.put(pages.get(i), 1.0f / pages.size());
         }
 
         //Get the inlinks and sort them by descending count
-        Map<String, Integer> inlinks = MapUtil.sortByValue(links.w);
-        PrintWriter writer = new PrintWriter("inlinks.txt", "UTF-8");
-        int index = 0;
-        for (Map.Entry<String, Integer> entry : inlinks.entrySet()) {
-            writer.println((index + 1) + " " + entry.getKey() + " " + entry.getValue().toString());
-            if (++index == 50) break;
-        }
-        writer.close();
+        //Map<String, Integer> inlinks = MapUtil.sortByValue(links.w);
+        //PrintWriter writer = new PrintWriter("inlinks.txt", "UTF-8");
+        //int index = 0;
+        //for (Map.Entry<String, Integer> entry : inlinks.entrySet()) {
+        //    writer.println((index + 1) + " " + entry.getKey() + " " + entry.getValue().toString());
+        //    if (++index == 50) break;
+        //}
+        //writer.close();
 
         //Get the PageRank and sort them by descending count
-        boolean first = true;
-        R.put("Biography", 0.0f);
-        float old = 0.0f;
-        while(Math.abs(R.get("Biography") - old) > tau || first) {
-            if (!first) old = R.get("Biography");
-            else first = false;
-            System.out.println("Ranking...");
+        float convergence = tau + .01f;
+        Map<String, Float> lastR;
+        float count = 0.0f;
+        while(convergence > tau) {
+            System.out.println("----------Ranking----------");
+            lastR = R;
             R.clear();
-            for (int i = 0; i < pages.size(); i++) {
-                R.put(pages.get(i), lambda / N);
+            for (String page : pages) {
+                R.put(page, lambda / N);
             }
             for (String page : pages) {
-                ArrayList<String> intemp = links.y.get(page);
-                ArrayList<String> outtemp = links.z.get(page);
-                ArrayList<String> Q = new ArrayList<>();
-                if (intemp != null && outtemp != null) {
-                    for (String link : outtemp) {
-                        if (!intemp.contains(link)) intemp.add(link);
-                    }
-                    Q = intemp;
-                }
-                if (Q.size() > 0) {
-                    for(String link : Q) {
-                        float prob = R.get(link);
-                        R.replace(link, prob, prob + (1 - lambda) * (I.get(link) / Q.size()));
+                ArrayList<String> Q = links.z.get(page);
+                if (Q != null) {
+                    for (String q : Q) {
+                        float rank = R.get(page);
+                        R.replace(q, rank, rank + (1.0f - lambda) * I.get(page) / (float)Q.size());
                     }
                 }
-                else if (outtemp != null) {
-                    for(String link : outtemp) {
-                        float prob = R.get(link);
-                        R.replace(link, prob, prob + (1 - lambda) * (I.get(link) / N));
-                    }
-                }
+                else count += (1.0f - lambda) * I.get(page) / N;
                 I = R;
             }
+            boolean first = true;
+            for (String page : pages) {
+                float min = Math.abs(lastR.get(page) - I.get(page));
+                if (first) {
+                    convergence = min;
+                    first = false;
+                }
+                if (convergence > min) convergence = min;
+                if (convergence < tau) break;
+            }
+            System.out.println(count);
+            System.out.println(convergence);
         }
+
         PrintWriter writer2 = new PrintWriter("pagerank.txt", "UTF-8");
-        Map<String, Float> PageRank = new HashMap<>();
-        for (String page : pages) {
-            PageRank.put(page, I.get(page));
-        }
-        PageRank = MapUtil.sortByValue(PageRank);
-        index = 0;
-        for (Map.Entry<String, Float> entry : PageRank.entrySet()) {
+        I = MapUtil.sortByValue(I);
+        int index = 0;
+        for (Map.Entry<String, Float> entry : I.entrySet()) {
             writer2.println((index + 1) + " " + entry.getKey() + " " + entry.getValue().toString());
             if (++index == 50) break;
         }
         writer2.close();
-        System.out.println(System.nanoTime() - start);
+        System.out.println('\n' + System.nanoTime() - start);
     }
 
     private PageRank() { }
